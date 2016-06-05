@@ -36,8 +36,9 @@ class Parser
     CSV.open(File.join(File.dirname(__FILE__), '../exports/', filename), 'wb') do |out|
       out << PRODUCT_FIELDS
       parsed_products.each do |product|
+        raise "Invalid keys in: #{product.keys}" if product.keys - PRODUCT_FIELDS != []
         out << PRODUCT_FIELDS.map do |field|
-          product[field]
+          JSON.dump product[field]
         end
       end
     end
@@ -46,3 +47,4 @@ end
 
 require_relative 'all4one/all_4_one.rb'
 require_relative 'ajm/ajm.rb'
+require_relative 'leeds.rb'
