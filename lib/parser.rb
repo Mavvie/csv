@@ -3,18 +3,22 @@ require 'json'
 
 class Parser
   PRODUCT_FIELDS = [
-    :name, :sku, :description, :options, :category_names, :tag_names,
-    :quantities, :list_prices, :discount_codes, :net_prices, :image_urls
+    :name, :sku, :parent_sku, :description, :metadata, :category_names, :tag_names,
+    :quantities, :list_prices, :discount_codes, :net_prices, :image_url
   ]
 
   attr_accessor :file
   def initialize
-    @file = File.open(File.join(File.dirname(__FILE__), '../imports/', filename))
+    @file = open_import(filename)
+  end
+
+  def open_import(filename)
+    File.open(File.join(File.dirname(__FILE__), '../imports/', filename))
   end
 
   def csv
     @csv ||= if headers?
-      CSV.parse(file.read, headers: true, header_converters: :symbol)
+      CSV.parse(file.read, headers: true, header_converters: header_converters)
     else
       CSV.parse(file.read)
     end
@@ -22,6 +26,10 @@ class Parser
 
   def headers?
     false
+  end
+
+  def header_converters
+    [:symbol]
   end
 
   def parsed_products
@@ -38,7 +46,11 @@ class Parser
       parsed_products.each do |product|
         raise "Invalid keys in: #{product.keys}" if product.keys - PRODUCT_FIELDS != []
         out << PRODUCT_FIELDS.map do |field|
-          JSON.dump product[field]
+          if !product[field]
+            nil
+          else
+            JSON.dump product[field]
+          end
         end
       end
     end
@@ -48,3 +60,4 @@ end
 require_relative 'all4one/all_4_one.rb'
 require_relative 'ajm/ajm.rb'
 require_relative 'leeds.rb'
+require_relative 'maple.rb'

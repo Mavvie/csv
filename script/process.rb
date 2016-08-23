@@ -1,7 +1,8 @@
 require_relative '../lib/parser.rb'
 SUPPLIER_MAP = {
   "ajm" => Ajm,
-  "leeds" => Leeds
+  "leeds" => Leeds,
+  "maple" => Maple
 }
 
 supplier = ARGV.shift
