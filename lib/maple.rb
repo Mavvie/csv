@@ -84,7 +84,7 @@ class Maple < Parser
           category_names: [categories[row["Main Category"]] || "Individual Packaging"],
           quantities: quantities,
           list_prices: list_prices,
-          discount_codes: {},
+          discount_codes: (row['Mfg Code'].last * list_prices.size rescue nil),
           image_url: image_url
         }
 
@@ -93,13 +93,15 @@ class Maple < Parser
           products << product
         end
       end
-    end.sort_by { |product|
+    end.sort_by do |product|
       if product[:sku] == product[:parent_sku]
         -1
       else
         1
       end
-    }
+    end.select do |product|
+      product[:category_names].all? { |n| n.match(/smoke|cheese/i).nil? }
+    end
   end
 
 end

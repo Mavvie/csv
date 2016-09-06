@@ -12,8 +12,8 @@ class Parser
     @file = open_import(filename)
   end
 
-  def open_import(filename)
-    File.open(File.join(File.dirname(__FILE__), '../imports/', filename))
+  def open_import(filename, mode = 'r')
+    File.open(File.join(File.dirname(__FILE__), '../imports/', filename), mode)
   end
 
   def csv
@@ -41,9 +41,10 @@ class Parser
   end
 
   def export
+    products = parsed_products
     CSV.open(File.join(File.dirname(__FILE__), '../exports/', filename), 'wb') do |out|
       out << PRODUCT_FIELDS
-      parsed_products.each do |product|
+      products.each do |product|
         raise "Invalid keys in: #{product.keys}" if product.keys - PRODUCT_FIELDS != []
         out << PRODUCT_FIELDS.map do |field|
           if !product[field]
@@ -54,6 +55,7 @@ class Parser
         end
       end
     end
+    products.size
   end
 end
 
@@ -61,3 +63,4 @@ require_relative 'all4one/all_4_one.rb'
 require_relative 'ajm/ajm.rb'
 require_relative 'leeds.rb'
 require_relative 'maple.rb'
+require_relative 'alpha.rb'

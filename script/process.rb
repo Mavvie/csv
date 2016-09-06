@@ -2,7 +2,8 @@ require_relative '../lib/parser.rb'
 SUPPLIER_MAP = {
   "ajm" => Ajm,
   "leeds" => Leeds,
-  "maple" => Maple
+  "maple" => Maple,
+  'alpha' => Alpha
 }
 
 supplier = ARGV.shift
@@ -15,6 +16,5 @@ klass = SUPPLIER_MAP[supplier]
 puts "Parsing #{klass}"
 
 parser = klass.new
-parser.export
 
-puts "Exported #{parser.filename}"
+puts "Exported #{parser.filename} (#{parser.export} SKUs)"
