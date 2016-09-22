@@ -3,7 +3,8 @@ SUPPLIER_MAP = {
   "ajm" => Ajm,
   "leeds" => Leeds,
   "maple" => Maple,
-  'alpha' => Alpha
+  'alpha' => Alpha,
+  'logoed' => Logoed
 }
 
 supplier = ARGV.shift

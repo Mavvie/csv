@@ -1,6 +1,3 @@
-require 'active_support'
-require 'active_support/core_ext'
-
 class Leeds < Parser
   COLOR_BLACKLIST = ['Component', 'Case']
   def headers?

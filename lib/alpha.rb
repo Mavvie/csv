@@ -13,12 +13,15 @@ class Alpha < Parser
     'alpha/items.csv'.freeze
   end
 
-  # def categories
-  #   @categories ||= CSV.parse(open_import('alpha/categories.csv'))[1..-1].inject({}) do |c,r|
-  #     c[r[0]] = r[1] if r[0] && r[1]
-  #     c
-  #   end
-  # end
+  def prices
+    @prices ||= begin
+      CSV.parse(open_import('alpha/retail.csv'), headers: true, header_converters: []).inject({}) do |prices, row|
+        prices[row['STYLE']] ||= []
+        prices[row['STYLE']] << {group: row['GROUP'], size: row['SIZE'], price: row['RETAIL'].gsub('$', '').to_d}
+        prices
+      end
+    end
+  end
 
   def parsed_products
     @parents = {}

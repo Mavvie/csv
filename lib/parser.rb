@@ -1,3 +1,5 @@
+require 'active_support'
+require 'active_support/core_ext'
 require 'csv'
 require 'json'
 
@@ -64,3 +66,4 @@ require_relative 'ajm/ajm.rb'
 require_relative 'leeds.rb'
 require_relative 'maple.rb'
 require_relative 'alpha.rb'
+require_relative 'logoed.rb'
