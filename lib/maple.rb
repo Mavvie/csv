@@ -20,11 +20,33 @@ class Maple < Parser
     end
   end
 
+  def canadian
+    @canadian ||= CSV.parse(open_import('maple/canadian.csv'), headers: true).inject({}) do |c,row|
+      c[row['MRF Item #']] = {}
+      row.to_hash.keys.compact.each do |key|
+        c[row['MRF Item #']][key] = row[key]
+      end
+      c
+    end
+  end
+
+  def images
+    @images ||= JSON.parse(open_import('maple/images.json', 'r').read)
+  end
+
+  def save_images
+    f = open_import('maple/images.json', 'w')
+    f.write images.to_json
+    f.close
+  end
+
   def parsed_products
     Array.new.tap do |products|
       csv.each_with_index do |row, index|
+        canadian_info = canadian[row['MRF Item #'].to_s + 'CA']
+        next unless canadian_info
         metadata = {}
-        metadata[:dimensions] = ["Product Dimensions L",	"Product Dimensions W", "Product Dimensions H"].map do |f|
+        metadata['dimensions'] = ["Product Dimensions L",	"Product Dimensions W", "Product Dimensions H"].map do |f|
           "#{row[f]}\"" if row[f] && row[f] != ""
         end.compact.join(" x ")
         metadata['imprint details'] = row['Imprint Details']
@@ -39,38 +61,45 @@ class Maple < Parser
         end
         metadata['ship weight'] = "#{row['Ship Weight Each']} lbs each; #{row['Weight per Case']} lbs per case of #{row['Units/Case']}"
 
-        list_prices = if row["Min Qty"].to_i == 300
+        list_prices = if canadian_info["Min Qty"].to_i == 300
           ["300-599", "600-2399"]
         else
           ["Min -47", "48-95", "96-239", "240-479", "480-959"]
         end.map do |name|
-          row[name].to_f
+          canadian_info[name].to_f
         end.reject { |p| p == 0.0}
 
-        quantities = if row["Min Qty"].to_i == 300
+        quantities = if canadian_info["Min Qty"].to_i == 300
           [300, 600]
         else
-          [row["Min Qty"].to_i, 48, 96, 240, 480]
+          [canadian_info["Min Qty"].to_i, 48, 96, 240, 480].uniq
         end[0..(list_prices.size-1)]
+        metadata['discount codes'] = "#{list_prices.size}C"
+        puts row['MRF Item #']
 
-        image_urls = [
-          "/u/8532883/maple_images/#{row["MRF Item #"]}_NoBkgd.jpg",
-          "/u/8532883/maple_images/#{row["MRF Item #"]}_NoBkgd-DS.jpg"
-        ]
-
-        image_url = image_urls.find do |path|
-          url = URI("https://dl.dropboxusercontent.com")
-          code = nil
-
-          Net::HTTP.start(url.host, url.port, use_ssl: true) do |http|
-             response = http.head(path)
-             code = response.code
-          end
-
-          code.to_i == 200
-        end
-
-        image_url = "https://dl.dropboxusercontent.com" + image_url if image_url
+        # if images[row['MRF Item #']].blank? && !row['MRF Item #'].match('IMC')
+        #   image_urls = [
+        #     "/u/8532883/maple_images/#{row["MRF Item #"]}_NoBkgd.jpg",
+        #     "/u/8532883/maple_images/#{row["MRF Item #"]}_NoBkgd-DS.jpg"
+        #   ]
+        #
+        #   image_url = image_urls.find do |path|
+        #     url = URI("https://dl.dropboxusercontent.com")
+        #     code = nil
+        #
+        #     Net::HTTP.start(url.host, url.port, use_ssl: true) do |http|
+        #        response = http.head(path)
+        #        code = response.code
+        #     end
+        #
+        #     code.to_i == 200
+        #   end
+        #
+        #   image_url = "https://dl.dropboxusercontent.com" + image_url if image_url
+        #   images[row['MRF Item #']] = image_url
+        #   save_images
+        # end
+        image_url = images[row['MRF Item #']]
 
         parent_sku = row["Default Item #"] || row["MRF Item #"]
         parent_sku = "NPD129" if parent_sku == "SPD129" # Shitty data
@@ -90,6 +119,8 @@ class Maple < Parser
 
         puts JSON.pretty_generate(product) if index % 10 == 0
         if product[:sku] && product[:sku] != ""
+          product[:sku] += 'CA'
+          product[:parent_sku] += 'CA'
           products << product
         end
       end

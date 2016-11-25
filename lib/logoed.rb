@@ -16,6 +16,7 @@ class Logoed < Parser
   def parsed_products
     Array.new.tap do |products|
       csv.each_with_index do |row, index|
+        next unless row['Active'].try(:strip) == 'Y'
         metadata = {}
         metadata['call for pricing'] = 'Please call for pricing' if row['CADPriceMsg1EN'].present?
         if row["DescriptionEN"].match 'Set up: 40 \(E\)'
