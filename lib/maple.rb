@@ -97,7 +97,7 @@ class Maple < Parser
         #   images[row['MRF Item #']] = image_url
         #   save_images
         # end
-        image_url = images[row['MRF Item #'] + 'CA']
+        image_url = images[row['MRF Item #']]
 
         parent_sku = row["Default Item #"] || row["MRF Item #"]
         parent_sku = "NPD129" if parent_sku == "SPD129" # Shitty data
@@ -106,9 +106,9 @@ class Maple < Parser
           name: row["Item Name"],
           sku: row["MRF Item #"],
           parent_sku: parent_sku,
-          description: row["Sales Flyer Copy"],
+          description: row["Catalog Copy"],
           metadata: metadata,
-          category_names: [categories[row["Main Category"]] || "Individual Packaging"],
+          category_names: [categories[row["Category"]] || "Individual Packaging"],
           quantities: quantities,
           list_prices: list_prices,
           discount_codes: (row['Mfg Code'].last * list_prices.size rescue nil),
@@ -117,8 +117,6 @@ class Maple < Parser
 
         puts JSON.pretty_generate(product) if index % 10 == 0
         if product[:sku] && product[:sku] != ""
-          product[:sku] += 'CA'
-          product[:parent_sku] += 'CA'
           products << product
         end
       end
