@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require_relative '../lib/parser.rb'
 SUPPLIER_MAP = {
   "ajm" => Ajm,
